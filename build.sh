@@ -23,6 +23,7 @@ fi
 source ../../AVP/android-setup-light.sh
 
 LOCAL_PATH=$($READLINK -f .)
+mkdir -p ../prebuilt/ffmpeg
 PREBUILT_DIR=$($READLINK -f ../prebuilt/ffmpeg)
 
 ANDROID_API=21

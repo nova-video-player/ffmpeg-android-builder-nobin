@@ -2,6 +2,7 @@
 
 source ../../AVP/android-setup-light.sh
 
+mkdir -p ../prebuilt/ffmpeg
 PREBUILT_DIR=$($READLINK -f ../prebuilt/ffmpeg)
 
 # skip if all prebuilt libs already exist
