@@ -25,15 +25,6 @@ source ../../AVP/android-setup-light.sh
 LOCAL_PATH=$($READLINK -f .)
 PREBUILT_DIR=$($READLINK -f ../prebuilt/ffmpeg)
 
-if [ ! -d ffmpeg.git ]; then
-  #git clone https://git.ffmpeg.org/ffmpeg.git ffmpeg
-  git clone https://git.ffmpeg.org/ffmpeg.git ffmpeg.git --bare --depth=1 -b n8.0.1
-  #git clone https://github.com/nova-video-player/FFmpeg ffmpeg.git --bare --depth=1 -b nova
-  #FIXME: cannot do depth 1 to lock commit
-  #git clone https://git.ffmpeg.org/ffmpeg.git ffmpeg.git --bare
-fi
-
-FFMPEG_BARE_PATH=$($READLINK -f ffmpeg.git)
 ANDROID_API=21
 
 ARCH_CONFIG_OPT=
@@ -81,6 +72,16 @@ if [ -f "${PREBUILT_DIR}/dist-${FLAVOR}-${ABI}/lib/libavcodec.so" ]; then
   echo "Already built for ${FLAVOR}-${ABI}"
   exit 0
 fi
+
+if [ ! -d ffmpeg.git ]; then
+  #git clone https://git.ffmpeg.org/ffmpeg.git ffmpeg
+  git clone https://git.ffmpeg.org/ffmpeg.git ffmpeg.git --bare --depth=1 -b n8.0.1
+  #git clone https://github.com/nova-video-player/FFmpeg ffmpeg.git --bare --depth=1 -b nova
+  #FIXME: cannot do depth 1 to lock commit
+  #git clone https://git.ffmpeg.org/ffmpeg.git ffmpeg.git --bare
+fi
+
+FFMPEG_BARE_PATH=$($READLINK -f ffmpeg.git)
 
 FFMPEG_DIR="$(mktemp -d)"
 #FFMPEG_DIR="$PWD/ffmpeg-$ABI"
