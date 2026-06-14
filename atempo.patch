@@ -1,0 +1,47 @@
+diff --git a/libavfilter/af_atempo.c b/libavfilter/af_atempo.c
+index 768840d99c..66481269f9 100644
+--- a/libavfilter/af_atempo.c
++++ b/libavfilter/af_atempo.c
+@@ -1159,6 +1159,42 @@ static int process_command(AVFilterContext *ctx,
+     return yae_update(ctx);
+ }
+ 
++// AVOS diagnostic accessor (read-only): expose af_atempo's instantaneous
++// internal state so the wrapper can tell bounded ring buffering apart from real
++// media loss across runtime tempo changes.  ring_size is the number of input
++// samples currently held in the WSOLA ring; pos_in/pos_out are the ring tail
++// input position and the output position; ns_in/ns_out are the cumulative
++// intrinsic counters.  No behavior change.  Named avfilter_* so the linker
++// version script (global: avfilter_*; av_*) exports it from the shared lib.
++void avfilter_atempo_get_state(AVFilterContext *ctx,
++                           int *ring_size,
++                           int64_t *pos_in,
++                           int64_t *pos_out,
++                           int64_t *ns_in,
++                           int64_t *ns_out,
++                           double *tempo);
++__attribute__((visibility("default")))
++void avfilter_atempo_get_state(AVFilterContext *ctx,
++                           int *ring_size,
++                           int64_t *pos_in,
++                           int64_t *pos_out,
++                           int64_t *ns_in,
++                           int64_t *ns_out,
++                           double *tempo)
++{
++    ATempoContext *atempo = ctx ? ctx->priv : NULL;
++    if (!atempo) {
++        if (ring_size) *ring_size = -1;
++        return;
++    }
++    if (ring_size) *ring_size = atempo->size;
++    if (pos_in)    *pos_in    = atempo->position[0];
++    if (pos_out)   *pos_out   = atempo->position[1];
++    if (ns_in)     *ns_in     = (int64_t)atempo->nsamples_in;
++    if (ns_out)    *ns_out    = (int64_t)atempo->nsamples_out;
++    if (tempo)     *tempo     = atempo->tempo;
++}
++
+ static const AVFilterPad atempo_inputs[] = {
+     {
+         .name         = "default",

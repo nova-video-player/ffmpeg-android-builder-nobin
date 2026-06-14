@@ -112,7 +112,7 @@ git clean -fdx
 #git checkout 2e2b44baba575a33aa66796bc0a0f93070ab6c53
 #git apply "${LOCAL_PATH}/config_opus.patch"
 cat "${LOCAL_PATH}/config_opus.patch" | patch -p 1
-
+cat "${LOCAL_PATH}/atempo.patch" | patch -p 1
 
 OS=$(uname -s | tr '[:upper:]' '[:lower:]')
 CROSS_DIR=$NDK_PATH/toolchains/llvm/prebuilt/${OS}-x86_64
