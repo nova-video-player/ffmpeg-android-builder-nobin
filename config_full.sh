@@ -28,4 +28,5 @@ CONFIG_LIBAV="\
 	--disable-vulkan \
 	--enable-openssl \
 	--enable-libmysofa \
+	--enable-libass \
 	"

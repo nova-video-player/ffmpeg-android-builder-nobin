@@ -102,9 +102,19 @@ OPENSSL_LIB=${OPENSSL_PREBUILT}/dist-${ABI}/lib
 LIBMYSOFA_PREBUILT=$($READLINK -f ../prebuilt/libmysofa)
 LIBMYSOFA_LIB=${LIBMYSOFA_PREBUILT}/lib/${ABI}
 
+FREETYPE_PREBUILT=$($READLINK -f ../prebuilt/freetype)
+FRIBIDI_PREBUILT=$($READLINK -f ../prebuilt/fribidi)
+HARFBUZZ_PREBUILT=$($READLINK -f ../prebuilt/harfbuzz)
+LIBASS_PREBUILT=$($READLINK -f ../prebuilt/libass)
+
 echo "dav1d dir is at ${DAV1D_DIR}"
 echo "libopus dir is at ${OPUS_DIR}"
-echo "openssl dir is at ${OPENSSL_DIR}"
+echo "openssl dir is at ${OPENSSL_PREBUILT}"
+echo "libmysofa dir is at ${LIBMYSOFA_PREBUILT}"
+echo "freetype dir is at ${FREETYPE_PREBUILT}"
+echo "fribidi dir is at ${FRIBIDI_PREBUILT}"
+echo "harfbuzz dir is at ${HARFBUZZ_PREBUILT}"
+echo "libass dir is at ${LIBASS_PREBUILT}"
 
 pushd "${FFMPEG_DIR}"
 
@@ -120,7 +130,7 @@ CROSS_PREFIX="${CROSS_DIR}/bin/${ARCH_TRIPLET}"
 
 mkdir -p "${PREBUILT_DIR}/dist-${FLAVOR}-${ABI}"
 
-export PKG_CONFIG_LIBDIR=${LOCAL_PATH}:${OPENSSL_PREBUILT}/dist-${ABI}/lib/pkgconfig
+export PKG_CONFIG_LIBDIR=${LOCAL_PATH}:${OPENSSL_PREBUILT}/dist-${ABI}/lib/pkgconfig:${FREETYPE_PREBUILT}/lib/${ABI}/pkgconfig:${FRIBIDI_PREBUILT}/lib/${ABI}/pkgconfig:${HARFBUZZ_PREBUILT}/lib/${ABI}/pkgconfig:${LIBASS_PREBUILT}/lib/${ABI}/pkgconfig
 
 ./configure --cross-prefix="${CROSS_PREFIX}-" \
             --cc="${CROSS_DIR}/bin/${CLANG_TRIPLET}${ANDROID_API}-clang" \
@@ -133,8 +143,8 @@ export PKG_CONFIG_LIBDIR=${LOCAL_PATH}:${OPENSSL_PREBUILT}/dist-${ABI}/lib/pkgco
             --enable-cross-compile --target-os=android \
             --prefix="${PREBUILT_DIR}/dist-${FLAVOR}-${ABI}" \
             --arch="${ARCH}" ${ARCH_CONFIG_OPT} \
-            --extra-cflags="${ARCH_CFLAGS} -fPIC -fPIE -DPIC -I${DAV1D_DIR}/dav1d/include -I${DAV1D_PREBUILT}/include -I${DAV1D_PREBUILT}/include/dav1d -I${OPUS_DIR}/opus/include -I${OPENSSL_PREBUILT}/dist-${ABI}/include -I${LIBMYSOFA_PREBUILT}/include" \
-            --extra-ldflags="${ARCH_LDFLAGS} -fPIE -pie -L${DAV1D_LIB} -L${OPUS_LIB} -L${OPENSSL_LIB} -L${LIBMYSOFA_LIB}" \
+            --extra-cflags="${ARCH_CFLAGS} -fPIC -fPIE -DPIC -I${DAV1D_DIR}/dav1d/include -I${DAV1D_PREBUILT}/include -I${DAV1D_PREBUILT}/include/dav1d -I${OPUS_DIR}/opus/include -I${OPENSSL_PREBUILT}/dist-${ABI}/include -I${LIBMYSOFA_PREBUILT}/include -I${FREETYPE_PREBUILT}/include -I${FREETYPE_PREBUILT}/include/freetype2 -I${FRIBIDI_PREBUILT}/include -I${HARFBUZZ_PREBUILT}/include -I${LIBASS_PREBUILT}/include" \
+            --extra-ldflags="${ARCH_LDFLAGS} -fPIE -pie -L${DAV1D_LIB} -L${OPUS_LIB} -L${OPENSSL_LIB} -L${LIBMYSOFA_LIB} -L${FREETYPE_PREBUILT}/lib/${ABI} -L${FRIBIDI_PREBUILT}/lib/${ABI} -L${HARFBUZZ_PREBUILT}/lib/${ABI} -L${LIBASS_PREBUILT}/lib/${ABI}" \
             --enable-shared --disable-static --disable-symver --disable-doc \
             ${CONFIG_LIBAV} > "${PREBUILT_DIR}/dist-${FLAVOR}-${ABI}/configure.log"
 make -j${CORES} install
