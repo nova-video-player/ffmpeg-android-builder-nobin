@@ -76,7 +76,7 @@ fi
 
 if [ ! -d ffmpeg.git ]; then
   #git clone https://git.ffmpeg.org/ffmpeg.git ffmpeg
-  git clone https://git.ffmpeg.org/ffmpeg.git ffmpeg.git --bare --depth=1 -b n8.0.1
+  git clone https://git.ffmpeg.org/ffmpeg.git ffmpeg.git --bare --depth=1 -b n8.0.3
   #git clone https://github.com/nova-video-player/FFmpeg ffmpeg.git --bare --depth=1 -b nova
   #FIXME: cannot do depth 1 to lock commit
   #git clone https://git.ffmpeg.org/ffmpeg.git ffmpeg.git --bare
@@ -129,6 +129,7 @@ export PKG_CONFIG_LIBDIR=${LOCAL_PATH}:${OPENSSL_PREBUILT}/dist-${ABI}/lib/pkgco
             --ranlib="${CROSS_DIR}/bin/llvm-ranlib" \
             --strip="${CROSS_DIR}/bin/llvm-strip" \
             --pkg-config=pkg-config \
+	    --pkg-config-flags="--static" \
             --sysroot="${CROSS_DIR}/sysroot" --sysinclude="${CROSS_DIR}/sysroot/usr/include" \
             --enable-cross-compile --target-os=android \
             --prefix="${PREBUILT_DIR}/dist-${FLAVOR}-${ABI}" \
