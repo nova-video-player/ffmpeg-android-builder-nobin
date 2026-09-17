@@ -1,8 +1,8 @@
 diff --git a/libavfilter/af_atempo.c b/libavfilter/af_atempo.c
-index 768840d99c..f5fb4b4bad 100644
+index 768840d99c..2c6e3fd29b 100644
 --- a/libavfilter/af_atempo.c
 +++ b/libavfilter/af_atempo.c
-@@ -152,6 +152,11 @@ typedef struct ATempoContext {
+@@ -152,6 +152,12 @@ typedef struct ATempoContext {
      uint8_t *dst_end;
      uint64_t nsamples_in;
      uint64_t nsamples_out;
@@ -11,19 +11,21 @@ index 768840d99c..f5fb4b4bad 100644
 +    // nsamples_in - size, this advances only when samples are actually emitted.
 +    int64_t media_position_out;
 +    int media_position_out_valid;
++    int64_t media_position_published;
  } ATempoContext;
  
  #define YAE_ATEMPO_MIN 0.5
-@@ -219,6 +224,8 @@ static void yae_clear(ATempoContext *atempo)
+@@ -219,6 +225,9 @@ static void yae_clear(ATempoContext *atempo)
  
      atempo->nsamples_in       = 0;
      atempo->nsamples_out      = 0;
 +    atempo->media_position_out = 0;
 +    atempo->media_position_out_valid = 0;
++    atempo->media_position_published = -1;
  }
  
  /**
-@@ -784,6 +791,7 @@ static int yae_overlap_add(ATempoContext *atempo,
+@@ -784,6 +793,7 @@ static int yae_overlap_add(ATempoContext *atempo,
  
      const int64_t ia = start_here - prev->position[1];
      const int64_t ib = start_here - frag->position[1];
@@ -31,7 +33,7 @@ index 768840d99c..f5fb4b4bad 100644
  
      const float *wa = atempo->hann + ia;
      const float *wb = atempo->hann + ib;
-@@ -809,6 +817,35 @@ static int yae_overlap_add(ATempoContext *atempo,
+@@ -809,6 +819,35 @@ static int yae_overlap_add(ATempoContext *atempo,
          yae_blend(double);
      }
  
@@ -67,7 +69,7 @@ index 768840d99c..f5fb4b4bad 100644
      // pass-back the updated destination buffer pointer:
      *dst_ref = dst;
  
-@@ -977,6 +1014,15 @@ static int yae_flush(ATempoContext *atempo,
+@@ -977,6 +1016,15 @@ static int yae_flush(ATempoContext *atempo,
      dst += nbytes;
  
      atempo->position[1] += (nbytes / atempo->stride);
@@ -83,7 +85,35 @@ index 768840d99c..f5fb4b4bad 100644
  
      // pass-back the updated destination buffer pointer:
      *dst_ref = (uint8_t *)dst;
-@@ -1159,6 +1205,74 @@ static int process_command(AVFilterContext *ctx,
+@@ -1046,6 +1094,10 @@ static int push_samples(ATempoContext *atempo,
+     if (ret < 0)
+         return ret;
+ 
++    // Publish only the frontier carried by the frame just delivered. Samples
++    // in a partially filled dst_buffer are not visible to downstream yet.
++    if (atempo->media_position_out_valid)
++        atempo->media_position_published = atempo->media_position_out;
+     atempo->nsamples_out += n_out;
+     return 0;
+ }
+@@ -1156,9 +1208,90 @@ static int process_command(AVFilterContext *ctx,
+     if (ret < 0)
+         return ret;
+ 
++    // Finish already-produced old-tempo output before changing the WSOLA
++    // origin. Do not flush the input ring or discard overlap history.
++    ATempoContext *atempo = ctx->priv;
++    if (atempo->dst_buffer) {
++        int count = (atempo->dst - atempo->dst_buffer->data[0]) / atempo->stride;
++        if (count > 0) {
++            ret = push_samples(atempo, ctx->outputs[0], count);
++            if (ret < 0)
++                return ret;
++        } else {
++            av_frame_free(&atempo->dst_buffer);
++            atempo->dst = atempo->dst_end = NULL;
++        }
++    }
      return yae_update(ctx);
  }
  
@@ -151,8 +181,7 @@ index 768840d99c..f5fb4b4bad 100644
 +        if (media_out) *media_out = -1;
 +        return;
 +    }
-+    if (media_out) *media_out = atempo->media_position_out_valid ?
-+                                atempo->media_position_out : -1;
++    if (media_out) *media_out = atempo->media_position_published;
 +}
 +
  static const AVFilterPad atempo_inputs[] = {
